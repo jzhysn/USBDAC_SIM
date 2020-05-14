@@ -3,19 +3,13 @@
 #include <String>
 HjkUSBDevice::HjkUSBDevice()
 {
-	hjkHandle = new HANDLE();
-	char list[2000];
-	int i = getUSBDevice(list);
-
-	printf("usb device counts is %d\n", i);
-	//getUSBEndPt();测试状态时不用
+	
 }
 
-int HjkUSBDevice::getUSBDevice(char* deviceList)
+int HjkUSBDevice::getHjkUSBDevice(string deviceList)
 {
-	USBDevice = new CCyUSBDevice(NULL, CYUSBDRV_GUID, true);
-
-	char  tempstr[200];
+	deviceList = "";
+	USBDevice = new CCyUSBDevice(NULL, CYUSBDRV_GUID, true);	
 	
 	if (USBDevice == NULL)
 	{
@@ -30,46 +24,37 @@ int HjkUSBDevice::getUSBDevice(char* deviceList)
 	// We No longer got restricted with vendor ID and Product ID.
 	// Check for vendor ID and product ID is discontinued.
 	///////////////////////////////////////////////////////////////////
-	char VendorID[50];
-	char ProductID[50];
+	string str;
+	stringstream sstem;
 	for (int i = 0; i < n; i++)
 	{
 		//if ((USBDevice->VendorID == VENDOR_ID) && (USBDevice->ProductID == PRODUCT_ID)) 
 		//    break;
-		USBDevice->Open(i);
-		memset(tempstr, 0, 200);
+		USBDevice->Open(i);		
+				
+		sstem << i << ".(0x" << hex << USBDevice->VendorID
+			<< " - 0x" << hex << USBDevice->ProductID << ") "
+			<< USBDevice->FriendlyName << "\n";
+
+		deviceList.append(sstem.str());	
+		cout << sstem.str();
+		sstem.clear();
+		sstem.str("");
 		
-		strcat(tempstr,(char *)&i);
-		/*
-		//printf("(0x");
-		strcat(tempstr+1, ".(0x");
-		//printf("%x", USBDevice->VendorID);
-		sprintf(VendorID, "%x", USBDevice->VendorID);
-		strcat(tempstr+5,VendorID);
-		//printf(" - 0x");
-		strcat(tempstr+55, " - 0x");		
-		//printf("%x", USBDevice->ProductID);
-		sprintf(ProductID, "%x", USBDevice->ProductID);
-		strcat(tempstr, ProductID);
-		//printf(") ");
-		strcat(tempstr, ") ");
-		//printf("%c\n", USBDevice->FriendlyName);
-		*/
-		strcat(tempstr+1, USBDevice->FriendlyName);
-		printf(tempstr); printf("\n");
-		//strcat(tempstr, "\n");
-		//strcat(deviceList, tempstr);
-	}
-	//默认测试
-	if (n > 0) {
-		//打开默认第一个
-		USBDevice->Open(0);
-	}
+		
+	}	
+	return n;
+}
 
-
-	//if ((USBDevice->VendorID == VENDOR_ID) && (USBDevice->ProductID == PRODUCT_ID)) 
+int HjkUSBDevice::getHjkUSBEndPt(int deviceNum, string EndPtInfo)
+{
+	EndPtInfo = "";
+	int eptCnt = 0;
+	stringstream ss;
+	//if ((USBDevice->VendorID == VENDOR_ID) && (USBDevice->ProductID == PRODUCT_ID))
+	if (USBDevice->DeviceCount() > 0)
 	{
-
+		USBDevice->Open(deviceNum);
 
 		int interfaces = USBDevice->AltIntfcCount() + 1;
 
@@ -81,83 +66,35 @@ int HjkUSBDevice::getUSBDevice(char* deviceList)
 			if (USBDevice->SetAltIntfc(i) == true)
 			{
 
-				int eptCnt = USBDevice->EndPointCount();
+				eptCnt = USBDevice->EndPointCount();
 
-				// Fill the EndPointsBox
+				// Fill the EndPtInfo
 				for (int e = 1; e < eptCnt; e++)
 				{
 					CCyUSBEndPoint *ept = USBDevice->EndPoints[e];
 					// INTR, BULK and ISO endpoints are supported.
 					if ((ept->Attributes >= 1) && (ept->Attributes <= 3))
 					{
-						/*一些信息显示
-						String *s = "";
-						s = String::Concat(s, ((ept->Attributes == 1) ? "ISOC " :
-							((ept->Attributes == 2) ? "BULK " : "INTR ")));
-						s = String::Concat(s, ept->bIn ? "IN,       " : "OUT,   ");
-						s = String::Concat(s, ept->MaxPktSize.ToString(), " Bytes,");
+						ss << ((ept->Attributes == 1) ? "ISOC " :
+							((ept->Attributes == 2) ? "BULK " : "INTR "))
+							<< (ept->bIn ? "IN,       " : "OUT,   ")
+							<<dec<< ept->MaxPktSize
+							<< " Bytes,";
 						if (USBDevice->BcdUSB == USB30MAJORVER)
-							s = String::Concat(s, ept->ssmaxburst.ToString(), " MaxBurst,");
-
-						s = String::Concat(s, "   (", i.ToString(), " - ");
-						s = String::Concat(s, "0x", ept->Address.ToString("X02"), ")");
-						EndPointsBox->Items->Add(s);
-						*/
+							ss << ept->ssmaxburst<<" MaxBurst,";
+						ss << "   (" << i << " - "
+							<< "0x" << hex << ept->Address << ")\n";
+						EndPtInfo.append(ss.str());
+						cout << ss.str();
+						ss.clear();
+						ss.str("");
 					}
 				}
+
 			}
 		}
-
-	}
-	return n;
-}
-
-int HjkUSBDevice::getUSBEndPt(CCyUSBDevice *usbDevice, int deviceNum,char *EndPtInfo)
-{
-	int eptCnt = 0;
-	//if ((USBDevice->VendorID == VENDOR_ID) && (USBDevice->ProductID == PRODUCT_ID))
-	if(usbDevice->DeviceCount() > 0)
-	{
-		usbDevice->Open(deviceNum);
-
-		int interfaces = usbDevice->AltIntfcCount() + 1;
-
-		bHighSpeedDevice = usbDevice->bHighSpeed;
-		bSuperSpeedDevice = usbDevice->bSuperSpeed;
-		
-		for (int i = 0; i < interfaces; i++)
-		{
-			if (usbDevice->SetAltIntfc(i) == true)
-			{
-
-				eptCnt = usbDevice->EndPointCount();
-
-				// Fill the EndPointsBox
-				for (int e = 1; e < eptCnt; e++)
-				{
-					CCyUSBEndPoint *ept = usbDevice->EndPoints[e];
-					// INTR, BULK and ISO endpoints are supported.
-					if ((ept->Attributes >= 1) && (ept->Attributes <= 3))
-					{
-						/*一些信息显示
-						String *s = "";
-						s = String::Concat(s, ((ept->Attributes == 1) ? "ISOC " :
-							((ept->Attributes == 2) ? "BULK " : "INTR ")));
-						s = String::Concat(s, ept->bIn ? "IN,       " : "OUT,   ");
-						s = String::Concat(s, ept->MaxPktSize.ToString(), " Bytes,");
-						if (USBDevice->BcdUSB == USB30MAJORVER)
-							s = String::Concat(s, ept->ssmaxburst.ToString(), " MaxBurst,");
-
-						s = String::Concat(s, "   (", i.ToString(), " - ");
-						s = String::Concat(s, "0x", ept->Address.ToString("X02"), ")");
-						EndPointsBox->Items->Add(s);
-						*/
-					}
-				}
-				
-			}
-		}
-	return eptCnt;
+		return eptCnt;
 	}
 	else return 0;
 }
+

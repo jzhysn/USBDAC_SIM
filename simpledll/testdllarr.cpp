@@ -1,32 +1,90 @@
 #include "pch.h"
 #include "testdllarr.h"
+#include "pch.h"
+#include <stdlib.h>
+#include <process.h>
 
-void testBuf(int *in, int *out,int len)
+
+// DLL internal state variables:
+
+static __int32 *outIntBuf;
+static __int32      *inData;
+static int			chNum;
+static bool			haveInit;
+//需要初始化设置
+static UCHAR sizeOfInt32;
+static int									MaxPktSize;
+
+//同步相关
+//只有获取数据后，in线程才能入队，且入队之前，数据不能变，
+static HANDLE			dataInEvent;
+//在填充一个节点的时候不能pull；
+static int				num;//计数
+
+//函数声明
+//void queueBufStart(__int32 *allChIn1, int ch, __int32 *out);
+void testIn(void *);
+void testFormat(void *);
+void testOut(void *);
+
+void initQueueBuf(int ch)
 {
-	/*
-	for (int i = 0; i <  len; i++)
-	{
-		out[i] = in[i] + 10;
-	}
-	*/
-	memset(out, 0xff, len * 4);
+	haveInit = false;
+	chNum = ch;
+	inData = NULL;
+	
+	
+
+
+
+
+
+
+
+
+	
+	//同步相关
+	num = 0;
+	dataInEvent = CreateEvent(NULL, false, false, NULL);
+
+
+	_beginthread(testIn, 0, NULL);
+	
+
+	haveInit = true;
 }
-//转置方法
-	//参数分别为输入数组、输出数组、有效位数（DAC位数,本工程为24bit）
-	//函数为固定的32位转置，后期改进
-int transpositionInt(unsigned int in[32], unsigned int out[32], char bitWide)
+//必须首先设置通道数
+void queueBufStart(__int32 *allChIn1, __int32 *out)
 {
-	unsigned int padBit = 0x01 << (bitWide - 1);//有效位的最高位取1
-	for (int i = 0; i < 32; i++)//32位无符号整型的转置输出，即32*4字节。
+	/*if (!haveInit)
 	{
-		out[i] = 0;
-		//第i个整型数的输出是32个数左移i位后（如都移至最高位）与某位相与后，再依次向右移动0-31位并相或的结果。即out_1 = data_1_bit&data_2_biit&...data_32_bit.其中，bit是某位代指。
-		for (int j = 0; j < 32; j++)
+		initQueueBuf(ch, outBytes);
+		out[0] = 123456;
+	}*/
+
+	/*else
+	{*/
+		//获取int型的数组地址，获取后才能入队
+		inData = allChIn1;
+		//获取数据事件发生
+		SetEvent(dataInEvent);
+		outIntBuf = out;
+
+		//out[0] = 654321;
+	/*}*/
+
+}
+
+//输入为所有用到的一次采样数据,输入为chNum个__int32的数组
+void testIn(void *)
+{
+	while (1)
+	{
+		WaitForSingleObject(dataInEvent, INFINITE);
+		for (int i = 0; i < chNum; i++)
 		{
-			out[i] |= (((in[j] << i) & padBit) >> j);
-
+			inData[i] += 3000;
 		}
+		memcpy(outIntBuf, inData, chNum * 4);
 	}
-	return 0;
-
 }

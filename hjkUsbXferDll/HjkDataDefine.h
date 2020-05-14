@@ -32,9 +32,9 @@ typedef struct _QUEUE_NODE_INT32_ARR_
 typedef struct NODE_INT32_ARR_
 {
 	UINT		datalen;//Í¨µÀÊý
-	__int32 *data;
-	
-
+	__int32		*data;
+	OVERLAPPED	ovLap;
+	UCHAR		*context;
 } qnodeChInt32;
 typedef struct _QUEUE_NODE_A_
 {

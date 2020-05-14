@@ -5,8 +5,9 @@
 #else
 #define HJKUSBXFERDLL_API __declspec(dllimport)
 #endif
-#define IN_RQUEUE_LEN	4
-#define OUT_RQUEUE_LEN	4
+#define IN_RQUEUE_LEN	1024
+#define OUT_RQUEUE_LEN	8
+#define XFER_TIME_OUT	100
 //int32 in func
 //extern "C" HJKUSBXFERDLL_API void  initQueueBuf(int ch,int outBytes);
 

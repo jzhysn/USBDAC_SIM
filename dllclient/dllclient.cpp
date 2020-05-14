@@ -5,33 +5,115 @@
 #include <Windows.h>
 #include <time.h> 
 #include <process.h>
+#include <String>
+#include <sstream>
+#include <chrono> 
 #include"hjkUsbXferdll.h"
+using namespace std;
 void startXfer(void *);
 int main()
 {
     std::cout << "Hello World!\n";
 	
-	initQueueBuf(4,128);
+	
 	//初始化后启动传输线程
 	_beginthread(startXfer, 0, NULL);
 	while (1);
-	
-	
+	/**********************/
+	int test1 = 0x12345678;
+	UCHAR *uct=(UCHAR *)malloc(4);
+	memcpy(uct, &test1, 4);
+	cout << *uct << endl;
+
+
+	stringstream ss;
+	short a = 1566;
+	string str;
+	int eptCnt;
+	for (int i = 0; i < 2; i++)
+	{
+		
+
+			eptCnt = 2;
+
+			// Fill the EndPtInfo
+			for (int e = 1; e < eptCnt; e++)
+			{
+				
+				// INTR, BULK and ISO endpoints are supported.
+				
+					ss << ((false) ? "ISOC " :
+						((true) ? "BULK " : "INTR "))
+						<< (true ? "IN,       " : "OUT,   ")
+						<< dec<< 1024
+						<< " Bytes,";
+					
+						ss << 15 << " MaxBurst,";
+					ss << "   (" << i << " - "
+						<< "0x" << hex << 99 << ")"<<endl;
+					str.append(ss.str());
+					//cout << ss.str();
+					ss.clear();
+					ss.str("");
+				
+			}
+
+		
+	}
+	str.append(ss.str());
+	//cout << str;
+	int slecd = -1;
+	int n = 1;
+	if (n > 0)
+	{
+		cout << str;
+		while (slecd < 0 || slecd >= n)
+		{
+			
+			cout<< "Slect one  hjkUSB device to xfer."<< endl;			
+			cin >> slecd;
+		}
+			
+		if (1)
+		{
+			
+				cout << "The USB end point is null, program exit." << endl;
+				exit(1);
+			
+			//long len = EndPt->MaxPktSize * PPX; // Each xfer request will get PPX isoc packets
+		}
+		else
+		{
+			cout << "USB device is not a hjkUSB device, program exit." << endl;
+			exit(1);
+		}
+
+	}
+	else
+	{
+		cout << "USB device is 0, program exit,please check the USB device or driver." << endl;
+		exit(1);
+	}
 }
 void startXfer(void *)
 {
-	int i = 0;
+	int i = 0x70000000;
 	int dda = 0;
-	__int32 in[4];
-	__int32 out[32];	
+	__int32 in[64];
+	__int32 out[512];	
 	while (1)
 	{
-		for (i = 0; i < 4; i++) {
+		for (i = 0; i < 64; i++) {
 			in[i] = ++dda;
 		}
-			Sleep(50);
+			
+		if (dda % 4194304 == 0)
+		{
+			cout << "dda = " << dda << ",time is " <<time(NULL)<< endl;
+		}
+		queueBufStart(in, out,64,2048);
 		
-		queueBufStart(in, out);
+	 	Sleep(0.1);
 	
 		//int x = out[0];
 	}

@@ -30,11 +30,13 @@ private:
 public:
 	HjkUSBDevice();
 	//~HjkUSBDevice();
-	//获取USB设备，返回设备数量,设备号和名称放入devicelist中
-	int getUSBDevice(char * deviceList);
-
+	//获取USB设备，返回设备数量,设备号和名称放入devicelist中，每个设备用换行符隔开。
+private:
+	int getHjkUSBDevice(string deviceList);
+	//打开设备号为n的usb设备
+	bool openHjkUSBDevice(int deviceNum);
 	//获取USB端点信息，返回端点数量
-	int getUSBEndPt(CCyUSBDevice *usbDevice, int deviceNum, char *EndPtInfo);
+	int getHjkUSBEndPt(int deviceNum, string EndPtInfo);
 
 	//设置USB设备
 	bool setUSBDevice();

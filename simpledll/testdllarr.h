@@ -7,4 +7,5 @@
 #define IN_RQUEUE_LEN	4
 #define OUT_RQUEUE_LEN	4
 //int32 in func
-extern "C" HJKSIMPLEDLL_API void  testBuf(int *in, int *out, int len);
+extern "C" HJKSIMPLEDLL_API void   initQueueBuf(int ch);
+extern "C" HJKSIMPLEDLL_API void queueBufStart(__int32 *allChIn1, __int32 *out);
